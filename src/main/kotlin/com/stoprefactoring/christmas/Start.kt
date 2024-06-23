@@ -1,6 +1,5 @@
 package com.stoprefactoring.christmas
 
-import com.intellij.execution.filters.TextConsoleBuilderFactory
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManagerListener
@@ -10,9 +9,6 @@ import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.ui.content.ContentFactory
 import java.io.File
-import javax.swing.JLabel
-import javax.swing.JPanel
-
 
 internal class Start : ToolWindowFactory {
     private val viewPainting = ViewPainting()
@@ -24,16 +20,6 @@ internal class Start : ToolWindowFactory {
             val content = factory.createContent(viewBody, null, true)
             toolWindow.contentManager.addContent(content)
         }
-    }
-}
-
-internal class Console : ToolWindowFactory {
-    private val viewPainting = ViewPainting()
-
-    override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
-        val consoleView = TextConsoleBuilderFactory.getInstance().createBuilder(project).console
-        val content = toolWindow.contentManager.factory.createContent(consoleView.component, null, true)
-        toolWindow.contentManager.addContent(content)
     }
 }
 

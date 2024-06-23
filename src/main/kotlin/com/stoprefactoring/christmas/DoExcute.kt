@@ -1,8 +1,6 @@
 package com.stoprefactoring.christmas
 
 import com.intellij.execution.configurations.GeneralCommandLine
-import com.intellij.execution.process.OSProcessHandler
-import com.intellij.execution.process.ProcessHandler
 import com.intellij.execution.ui.ConsoleView
 import com.intellij.execution.ui.ConsoleViewContentType
 import com.intellij.openapi.actionSystem.AnAction
@@ -10,21 +8,23 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
+import com.intellij.openapi.observable.util.whenDisposed
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.SystemInfo
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.wm.ToolWindowManager
+import com.intellij.terminal.ui.TerminalWidget
 import com.intellij.ui.content.ContentFactory
-import com.intellij.lang.Language
+import org.jetbrains.plugins.terminal.TerminalToolWindowManager
 import java.awt.event.MouseEvent
 import java.io.File
 import java.nio.charset.Charset
 import javax.swing.Icon
 import javax.swing.JTree
-import javax.swing.UIManager
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.TreePath
+
 
 val viewPainting = ViewPainting()
 fun DoExcute_Reflash(project: Project) {
@@ -50,6 +50,7 @@ fun DoExcute_Reflash(project: Project) {
     }
 }
 
+var DoExcute_ConsoleExcute_Terminal:TerminalWidget ?= null
 fun DoExcute_ConsoleExcute(event:MouseEvent, tree: JTree, project:Project) {
     //STEP::Get tree selected node
     val path: TreePath = tree.getClosestPathForLocation(event.x, event.y) ?: return
@@ -62,7 +63,7 @@ fun DoExcute_ConsoleExcute(event:MouseEvent, tree: JTree, project:Project) {
     //STEP::Get task function
     val parentNode = lastPathComponent.parent as DefaultMutableTreeNode
     val function = parentNode.userObject as String + "/" + node.userObject as String
-
+    
     //STEP::Run command
     ApplicationManager.getApplication().invokeLater {
         //STEP-IN::Make command
@@ -77,14 +78,50 @@ fun DoExcute_ConsoleExcute(event:MouseEvent, tree: JTree, project:Project) {
         generalCommandLine.setWorkDirectory(project.basePath)
 
         //STEP-IN::Run command and active toolWindow
-        var processHandler: ProcessHandler = OSProcessHandler(generalCommandLine)
-        val consoleWindow = ToolWindowManager.getInstance(project).getToolWindow("Christmas-Run")
-        var consoleComponent = consoleWindow?.contentManager?.getContent(0)?.component
-        val console: ConsoleView = consoleComponent as ConsoleView
-        consoleWindow?.show()
-        console.clear()
-        console.attachToProcess(processHandler)
-        processHandler.startNotify()
+        val shellWindow = TerminalToolWindowManager.getInstance(project)
+        if (DoExcute_ConsoleExcute_Terminal != null) {
+            val container = shellWindow.getContainer(DoExcute_ConsoleExcute_Terminal!!)
+            DoExcute_ConsoleExcute_Terminal?.whenDisposed {
+                DoExcute_ConsoleExcute_Terminal = shellWindow.createShellWidget(project.basePath, "Christmas-Run", true, true)
+                DoExcute_ConsoleExcute_Terminal?.sendCommandToExecute(generalCommandLine.commandLineString)
+                DoExcute_ConsoleExcute_Terminal?.requestFocus()
+            }
+            container?.closeAndHide()
+        } else{
+            DoExcute_ConsoleExcute_Terminal = shellWindow.createShellWidget(project.basePath, "Christmas-Run", true, true)
+            DoExcute_ConsoleExcute_Terminal?.sendCommandToExecute(generalCommandLine.commandLineString)
+            DoExcute_ConsoleExcute_Terminal?.requestFocus()
+        }
+    }
+}
+fun DoExcute_MarkSlected_Run(project:Project){
+    ApplicationManager.getApplication().invokeLater {
+        //STEP::Make command
+        val cmds = ArrayList<String>()
+        if (SystemInfo.isWindows)
+            cmds.add("powershell.exe")
+        cmds.add("python3")
+        cmds.add("Christmas/Christmas.py")
+        cmds.add(DoExcute_MarkSlected_Slect)
+        val generalCommandLine: GeneralCommandLine = GeneralCommandLine(cmds)
+        generalCommandLine.charset = Charset.forName("UTF-8")
+        generalCommandLine.setWorkDirectory(project.basePath)
+
+        //STEP::Run command and active toolWindow
+        val shellWindow = TerminalToolWindowManager.getInstance(project)
+        if (DoExcute_ConsoleExcute_Terminal != null) {
+            val container = shellWindow.getContainer(DoExcute_ConsoleExcute_Terminal!!)
+            DoExcute_ConsoleExcute_Terminal?.whenDisposed {
+                DoExcute_ConsoleExcute_Terminal = shellWindow.createShellWidget(project.basePath, "Christmas-Run", true, true)
+                DoExcute_ConsoleExcute_Terminal?.sendCommandToExecute(generalCommandLine.commandLineString)
+                DoExcute_ConsoleExcute_Terminal?.requestFocus()
+            }
+            container?.closeAndHide()
+        } else{
+            DoExcute_ConsoleExcute_Terminal = shellWindow.createShellWidget(project.basePath, "Christmas-Run", true, true)
+            DoExcute_ConsoleExcute_Terminal?.sendCommandToExecute(generalCommandLine.commandLineString)
+            DoExcute_ConsoleExcute_Terminal?.requestFocus()
+        }
     }
 }
 
@@ -122,30 +159,6 @@ fun DoExcute_MarkSlected_OpenFile(project:Project, tail:String){
         consoleWindow?.show()
         console.clear()
         console.print(filePath+" not found", ConsoleViewContentType.ERROR_OUTPUT)
-    }
-}
-fun DoExcute_MarkSlected_Run(project:Project){
-    ApplicationManager.getApplication().invokeLater {
-        //STEP::Make command
-        val cmds = ArrayList<String>()
-        if (SystemInfo.isWindows)
-            cmds.add("powershell.exe")
-        cmds.add("python3")
-        cmds.add("Christmas/Christmas.py")
-        cmds.add(DoExcute_MarkSlected_Slect)
-        val generalCommandLine: GeneralCommandLine = GeneralCommandLine(cmds)
-        generalCommandLine.charset = Charset.forName("UTF-8")
-        generalCommandLine.setWorkDirectory(project.basePath)
-
-        //STEP::Run command and active toolWindow
-        var processHandler: ProcessHandler = OSProcessHandler(generalCommandLine)
-        val consoleWindow = ToolWindowManager.getInstance(project).getToolWindow("Christmas-Run")
-        var consoleComponent = consoleWindow?.contentManager?.getContent(0)?.component
-        val console: ConsoleView = consoleComponent as ConsoleView
-        consoleWindow?.show()
-        console.clear()
-        console.attachToProcess(processHandler)
-        processHandler.startNotify()
     }
 }
 

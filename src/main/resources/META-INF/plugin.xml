@@ -26,6 +26,7 @@
     <!-- Product and plugin compatibility requirements.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
     <depends>com.intellij.modules.platform</depends>
+    <depends>org.jetbrains.plugins.terminal</depends>
 
     <actions>
         <!-- 其他动作 -->
@@ -40,9 +41,6 @@
     <extensions defaultExtensionNs="com.intellij">
         <toolWindow factoryClass="com.stoprefactoring.christmas.Start" id="Christmas" canCloseContents="false"
                     anchor="right" icon="/icon/logo.svg">
-        </toolWindow>
-        <toolWindow factoryClass="com.stoprefactoring.christmas.Console" id="Christmas-Run" canCloseContents="true"
-                    anchor="bottom" icon="/icon/logo.svg">
         </toolWindow>
     </extensions>
 

@@ -19,8 +19,6 @@ import java.awt.event.MouseEvent
 import java.io.File
 import java.util.*
 import javax.swing.*
-import javax.swing.event.TreeExpansionEvent
-import javax.swing.event.TreeWillExpandListener
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeModel
 

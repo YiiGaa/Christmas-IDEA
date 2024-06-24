@@ -17,6 +17,7 @@ import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.terminal.ui.TerminalWidget
 import com.intellij.ui.content.ContentFactory
 import org.jetbrains.plugins.terminal.TerminalToolWindowManager
+import org.jetbrains.plugins.terminal.ui.TerminalContainer
 import java.awt.event.MouseEvent
 import java.io.File
 import java.nio.charset.Charset
@@ -65,6 +66,12 @@ fun DoExcute_ConsoleExcute(event:MouseEvent, tree: JTree, project:Project) {
     val function = parentNode.userObject as String + "/" + node.userObject as String
     
     //STEP::Run command
+    DoExcute_ConsoleExcute_Terminal_Do(project, function)
+}
+fun DoExcute_MarkSlected_Run(project:Project){
+    DoExcute_ConsoleExcute_Terminal_Do(project, DoExcute_MarkSlected_Slect)
+}
+fun DoExcute_ConsoleExcute_Terminal_Do(project: Project, taskFuncion:String){
     ApplicationManager.getApplication().invokeLater {
         //STEP-IN::Make command
         val cmds = ArrayList<String>()
@@ -72,55 +79,37 @@ fun DoExcute_ConsoleExcute(event:MouseEvent, tree: JTree, project:Project) {
             cmds.add("powershell.exe")
         cmds.add("python3")
         cmds.add("Christmas/Christmas.py")
-        cmds.add(function)
+        cmds.add(taskFuncion)
         val generalCommandLine: GeneralCommandLine = GeneralCommandLine(cmds)
         generalCommandLine.charset = Charset.forName("UTF-8")
         generalCommandLine.setWorkDirectory(project.basePath)
 
         //STEP-IN::Run command and active toolWindow
-        val shellWindow = TerminalToolWindowManager.getInstance(project)
-        if (DoExcute_ConsoleExcute_Terminal != null) {
-            val container = shellWindow.getContainer(DoExcute_ConsoleExcute_Terminal!!)
-            DoExcute_ConsoleExcute_Terminal?.whenDisposed {
-                DoExcute_ConsoleExcute_Terminal = shellWindow.createShellWidget(project.basePath, "Christmas-Run", true, true)
-                DoExcute_ConsoleExcute_Terminal?.sendCommandToExecute(generalCommandLine.commandLineString)
-                DoExcute_ConsoleExcute_Terminal?.requestFocus()
+        val tabName = "Christmas-Run"
+        val terminalWindow = TerminalToolWindowManager.getInstance(project)
+        if(DoExcute_ConsoleExcute_Terminal == null) {
+            for(widget in (terminalWindow.terminalWidgets)){
+                if(widget.terminalTitle.defaultTitle.equals(tabName)||
+                    widget.terminalTitle.userDefinedTitle.equals(tabName)){
+                    DoExcute_ConsoleExcute_Terminal = widget
+                    break
+                }
             }
-            container?.closeAndHide()
-        } else{
-            DoExcute_ConsoleExcute_Terminal = shellWindow.createShellWidget(project.basePath, "Christmas-Run", true, true)
-            DoExcute_ConsoleExcute_Terminal?.sendCommandToExecute(generalCommandLine.commandLineString)
-            DoExcute_ConsoleExcute_Terminal?.requestFocus()
         }
-    }
-}
-fun DoExcute_MarkSlected_Run(project:Project){
-    ApplicationManager.getApplication().invokeLater {
-        //STEP::Make command
-        val cmds = ArrayList<String>()
-        if (SystemInfo.isWindows)
-            cmds.add("powershell.exe")
-        cmds.add("python3")
-        cmds.add("Christmas/Christmas.py")
-        cmds.add(DoExcute_MarkSlected_Slect)
-        val generalCommandLine: GeneralCommandLine = GeneralCommandLine(cmds)
-        generalCommandLine.charset = Charset.forName("UTF-8")
-        generalCommandLine.setWorkDirectory(project.basePath)
-
-        //STEP::Run command and active toolWindow
-        val shellWindow = TerminalToolWindowManager.getInstance(project)
-        if (DoExcute_ConsoleExcute_Terminal != null) {
-            val container = shellWindow.getContainer(DoExcute_ConsoleExcute_Terminal!!)
+        var termianlContainer:TerminalContainer ?=null
+        if(DoExcute_ConsoleExcute_Terminal!=null)
+            termianlContainer = terminalWindow.getContainer(DoExcute_ConsoleExcute_Terminal!!)
+        if(termianlContainer==null){
+            DoExcute_ConsoleExcute_Terminal = terminalWindow.createShellWidget(project.basePath, tabName, true, true)
+            DoExcute_ConsoleExcute_Terminal?.sendCommandToExecute(generalCommandLine.commandLineString)
+            DoExcute_ConsoleExcute_Terminal?.requestFocus()
+        }else{
             DoExcute_ConsoleExcute_Terminal?.whenDisposed {
-                DoExcute_ConsoleExcute_Terminal = shellWindow.createShellWidget(project.basePath, "Christmas-Run", true, true)
+                DoExcute_ConsoleExcute_Terminal = terminalWindow.createShellWidget(project.basePath, tabName, true, true)
                 DoExcute_ConsoleExcute_Terminal?.sendCommandToExecute(generalCommandLine.commandLineString)
                 DoExcute_ConsoleExcute_Terminal?.requestFocus()
             }
-            container?.closeAndHide()
-        } else{
-            DoExcute_ConsoleExcute_Terminal = shellWindow.createShellWidget(project.basePath, "Christmas-Run", true, true)
-            DoExcute_ConsoleExcute_Terminal?.sendCommandToExecute(generalCommandLine.commandLineString)
-            DoExcute_ConsoleExcute_Terminal?.requestFocus()
+            termianlContainer.closeAndHide()
         }
     }
 }
@@ -159,38 +148,5 @@ fun DoExcute_MarkSlected_OpenFile(project:Project, tail:String){
         consoleWindow?.show()
         console.clear()
         console.print(filePath+" not found", ConsoleViewContentType.ERROR_OUTPUT)
-    }
-}
-
-class HidePluginAction : AnAction {
-    // 如果需要，可以添加构造函数来接受参数，例如图标或文本
-    constructor(text: String, description: String, icon: Icon?) : super(text, description, icon)
-
-    // 无参构造函数
-    constructor() : super("My Hidden Action", "Description of my hidden action", null)
-
-    override fun actionPerformed(e: AnActionEvent) {
-        // 动作被触发时的逻辑
-        val project = e.project
-        println("- actionPerformed")
-        if (project != null) {
-            // 执行需要项目上下文的代码
-        } else {
-            // 处理没有打开项目的特殊情况
-        }
-    }
-
-    override fun update(e: AnActionEvent) {
-        super.update(e)
-        println("- update")
-        val project = e.project
-        // 根据项目是否存在来设置动作的可见性和可用性
-        e.presentation.isEnabledAndVisible = project != null && isApplicable(project)
-    }
-
-    private fun isApplicable(project: Project): Boolean {
-        // 这里实现你的逻辑，决定是否隐藏动作
-        // 例如，检查项目中是否存在特定的文件或配置
-        return false // 假设默认不适用，根据条件返回 true 或 false
     }
 }

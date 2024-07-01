@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.stoprefactoring"
-version = "1.2"
+version = "1.0"
 
 repositories {
     mavenCentral()

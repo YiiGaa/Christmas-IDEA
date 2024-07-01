@@ -13,28 +13,19 @@
     <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
          Simple HTML elements (text formatting, paragraphs, and lists) can be added inside of <![CDATA[ ]]> tag.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
-    <description><![CDATA[
+    <description><![CDATA[<div>A IDEA extension for the Christmas tool, which is a generic code generator. Before using the extension, you need to ensure that the first level of the project directory contains the Christmas tool, because The extension essentially operates the Christmas tool from the command line.</div>
+    <div> </div>
+    <div>--Stop refactoring production</div>
+    <div> </div>
     <div>这是一个Christmas工具的IDEA插件，Christmas是一个通用代码生成器。使用插件前，需要保证工程目录的一级目录包含Christmas工具，因为插件实质上是通过命令行操作Christmas工具的。</div>
     <div> </div>
     <div>--停止重构出品</div>
-    <div> </div>
-    <div>A IDEA extension for the Christmas tool, which is a generic code generator. Before using the extension, you need to ensure that the first level of the project directory contains the Christmas tool, because The extension essentially operates the Christmas tool from the command line.</div>
-    <div> </div>
-    <div>--Stop refactoring production</div>
   ]]></description>
 
     <!-- Product and plugin compatibility requirements.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
     <depends>com.intellij.modules.platform</depends>
     <depends>org.jetbrains.plugins.terminal</depends>
-
-    <actions>
-        <!-- 其他动作 -->
-
-        <action id="com.stoprefactoring.christmas.hide" class="com.stoprefactoring.christmas.HidePluginAction" text="hide Christmas" description="hide Christmas plugin">
-            <!-- 可以添加其他子标签，比如 keymap、group 等 -->
-        </action>
-    </actions>
 
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->

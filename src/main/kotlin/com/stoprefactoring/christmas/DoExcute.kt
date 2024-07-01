@@ -86,6 +86,8 @@ fun DoExcute_ConsoleExcute_Terminal_Do(project: Project, taskFuncion:String){
 
         //STEP-IN::Run command and active toolWindow
         val tabName = "Christmas-Run"
+        val consoleWindow = ToolWindowManager.getInstance(project).getToolWindow("Terminal")
+        consoleWindow?.show()
         val terminalWindow = TerminalToolWindowManager.getInstance(project)
         if(DoExcute_ConsoleExcute_Terminal == null) {
             for(widget in (terminalWindow.terminalWidgets)){
@@ -142,11 +144,11 @@ fun DoExcute_MarkSlected_OpenFile(project:Project, tail:String){
     }
     //WHEN::Output error info when not found
     else {
-        val consoleWindow = ToolWindowManager.getInstance(project).getToolWindow("Christmas-Run")
-        var consoleComponent = consoleWindow?.contentManager?.getContent(0)?.component
-        val console: ConsoleView = consoleComponent as ConsoleView
-        consoleWindow?.show()
-        console.clear()
-        console.print(filePath+" not found", ConsoleViewContentType.ERROR_OUTPUT)
+//        val consoleWindow = ToolWindowManager.getInstance(project).getToolWindow("Christmas-Run")
+//        var consoleComponent = consoleWindow?.contentManager?.getContent(0)?.component
+//        val console: ConsoleView = consoleComponent as ConsoleView
+//        consoleWindow?.show()
+//        console.clear()
+//        console.print(filePath+" not found", ConsoleViewContentType.ERROR_OUTPUT)
     }
 }

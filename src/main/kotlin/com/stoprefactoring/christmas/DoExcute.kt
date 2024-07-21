@@ -3,6 +3,7 @@ package com.stoprefactoring.christmas
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.ui.ConsoleView
 import com.intellij.execution.ui.ConsoleViewContentType
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.application.ApplicationManager
@@ -10,6 +11,7 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.observable.util.whenDisposed
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.util.SystemInfo
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VfsUtil
@@ -106,11 +108,16 @@ fun DoExcute_ConsoleExcute_Terminal_Do(project: Project, taskFuncion:String){
             DoExcute_ConsoleExcute_Terminal?.sendCommandToExecute(generalCommandLine.commandLineString)
             DoExcute_ConsoleExcute_Terminal?.requestFocus()
         }else{
-            DoExcute_ConsoleExcute_Terminal?.whenDisposed {
+//            DoExcute_ConsoleExcute_Terminal?.whenDisposed {
+//                DoExcute_ConsoleExcute_Terminal = terminalWindow.createShellWidget(project.basePath, tabName, true, true)
+//                DoExcute_ConsoleExcute_Terminal?.sendCommandToExecute(generalCommandLine.commandLineString)
+//                DoExcute_ConsoleExcute_Terminal?.requestFocus()
+//            }
+            DoExcute_ConsoleExcute_Terminal?.let { Disposer.register(it, Disposable {
                 DoExcute_ConsoleExcute_Terminal = terminalWindow.createShellWidget(project.basePath, tabName, true, true)
                 DoExcute_ConsoleExcute_Terminal?.sendCommandToExecute(generalCommandLine.commandLineString)
                 DoExcute_ConsoleExcute_Terminal?.requestFocus()
-            }
+            }) }
             termianlContainer.closeAndHide()
         }
     }

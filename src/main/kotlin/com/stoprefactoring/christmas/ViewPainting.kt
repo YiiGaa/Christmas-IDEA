@@ -43,6 +43,7 @@ class ViewPainting {
 
     private fun menuMake(project:Project): JBPopupMenu {
         //STEP::Init menu
+        menuPanel.removeAll()
         menuPanel.border = BorderFactory.createEmptyBorder(10, 10, 10, 10)
 
         //STEP::Init menu item

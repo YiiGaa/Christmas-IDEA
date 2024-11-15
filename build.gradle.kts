@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.stoprefactoring"
-version = "1.1"
+version = "1.2"
 
 repositories {
     mavenCentral()
@@ -21,6 +21,10 @@ intellij {
     plugins.set(listOf("org.jetbrains.plugins.terminal"))
 }
 
+dependencies {
+    implementation("com.google.code.gson:gson:2.8.9")
+}
+
 tasks {
     // Set the JVM compatibility versions
     withType<JavaCompile> {
@@ -33,7 +37,7 @@ tasks {
 
     patchPluginXml {
         sinceBuild.set("241")
-        untilBuild.set("241.*")
+        untilBuild.set("243.*")
     }
 
     signPlugin {

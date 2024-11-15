@@ -17,7 +17,6 @@ import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.terminal.ui.TerminalWidget
-import com.intellij.testFramework.utils.vfs.getFile
 import com.intellij.ui.content.ContentFactory
 import org.jetbrains.plugins.terminal.TerminalToolWindowManager
 import org.jetbrains.plugins.terminal.ui.TerminalContainer
@@ -28,9 +27,6 @@ import javax.swing.Icon
 import javax.swing.JTree
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.TreePath
-import com.google.gson.Gson
-import com.google.gson.JsonObject
-import com.intellij.openapi.vfs.VirtualFile
 
 
 val viewPainting = ViewPainting()
@@ -152,52 +148,6 @@ fun DoExcute_MarkSlected_OpenFile(project:Project, tail:String){
     if (file != null && file.exists()) {
         val descriptor = OpenFileDescriptor(project, file)
         FileEditorManager.getInstance(project).openTextEditor(descriptor, true);
-    }
-    //WHEN::Output error info when not found
-    else {
-//        val consoleWindow = ToolWindowManager.getInstance(project).getToolWindow("Christmas-Run")
-//        var consoleComponent = consoleWindow?.contentManager?.getContent(0)?.component
-//        val console: ConsoleView = consoleComponent as ConsoleView
-//        consoleWindow?.show()
-//        console.clear()
-//        console.print(filePath+" not found", ConsoleViewContentType.ERROR_OUTPUT)
-    }
-}
-
-fun DoExcute_MarkSlected_OpenFile(project:Project, tail:String, target:String, targetFileMap:MutableMap<String, String>){
-    val fileSystem = LocalFileSystem.getInstance()
-
-    //STEP::Find last result
-    if(targetFileMap.containsKey(DoExcute_MarkSlected_Slect)){
-        val targetFilePath:String = targetFileMap[DoExcute_MarkSlected_Slect] as String
-        val targetFile = fileSystem.findFileByPath(targetFilePath.replace('/', File.separatorChar))
-        if (targetFile != null && targetFile.exists()) {
-            val descriptor = OpenFileDescriptor(project, targetFile)
-            FileEditorManager.getInstance(project).openTextEditor(descriptor, true);
-        }
-        return
-    }
-
-    //STEP::Find file
-    val filePath = project.basePath + "/Christmas/Input/"+DoExcute_MarkSlected_Slect+"/"+tail
-    val file = fileSystem.findFileByPath(filePath.replace('/', File.separatorChar))
-
-    //WHEN::Config file is not exists
-    if(file == null || !file.exists()) {
-        return
-    }
-
-    //WHEN::Get real target file path
-    val config = File(filePath.replace('/', File.separatorChar)).readText()
-    val configObject = Gson().fromJson(config, JsonObject::class.java)
-    val targetFilePath = project.basePath + if(configObject.has("targetFile")) "/Christmas/"+configObject.get("targetFile").asString else "/Christmas/Input/$DoExcute_MarkSlected_Slect/$target"
-    val targetFile =  fileSystem.findFileByPath(targetFilePath.replace('/', File.separatorChar))
-
-    //WHEN::Open file when found
-    if (targetFile != null && targetFile.exists()) {
-        val descriptor = OpenFileDescriptor(project, targetFile)
-        FileEditorManager.getInstance(project).openTextEditor(descriptor, true);
-        targetFileMap[DoExcute_MarkSlected_Slect] = targetFilePath;
     }
     //WHEN::Output error info when not found
     else {

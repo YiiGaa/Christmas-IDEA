@@ -77,8 +77,8 @@ fun DoExcute_ConsoleExcute_Terminal_Do(project: Project, taskFuncion:String){
     ApplicationManager.getApplication().invokeLater {
         //STEP-IN::Make command
         val cmds = ArrayList<String>()
-        if (SystemInfo.isWindows)
-            cmds.add("powershell.exe")
+//        if (SystemInfo.isWindows)
+//            cmds.add("powershell.exe")
         cmds.add("python3")
         cmds.add("Christmas/Christmas.py")
         cmds.add(taskFuncion)

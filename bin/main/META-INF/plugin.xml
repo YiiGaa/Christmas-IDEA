@@ -24,13 +24,14 @@
 
     <change-notes>
         <![CDATA[
-            <h2>New Features</h2>
+            <h2>1.3</h2>
             <ul>
-              <li>Adapt to Christmas2.2</li>
+              <li>[update]Adapts to WSL terminal</li>
             </ul>
-            <h2>Bug Fixes</h2>
+            <h2>1.2</h2>
             <ul>
-              <li>The color of the menu selection is confused</li>
+              <li>[update]Adapt to Christmas2.2</li>
+              <li>[bug]The color of the menu selection is confused</li>
             </ul>
         ]]>
     </change-notes>

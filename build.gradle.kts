@@ -1,52 +1,78 @@
 plugins {
     id("java")
-    id("org.jetbrains.kotlin.jvm") version "1.9.23"
-    id("org.jetbrains.intellij") version "1.17.3"
+    id("org.jetbrains.kotlin.jvm") version "2.1.20"
+    id("org.jetbrains.intellij.platform") version "2.10.2"
 }
 
 group = "com.stoprefactoring"
-version = "1.3"
+version = "3.0"
 
 repositories {
     mavenCentral()
+    intellijPlatform {
+        defaultRepositories()
+    }
 }
 
-// Configure Gradle IntelliJ Plugin
-// Read more: https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin.html
-intellij {
-    version.set("2024.1.2")
-    //version.set("2023.2.6")
-    type.set("IC") // Target IDE Platform
-
-    plugins.set(listOf("org.jetbrains.plugins.terminal"))
-}
-
+// Read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin.html
 dependencies {
-    implementation("com.google.code.gson:gson:2.8.9")
+    intellijPlatform {
+        intellijIdea("2025.2.4")
+        testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.Platform)
+
+        bundledPlugins(
+            "org.jetbrains.plugins.terminal",
+            "com.intellij.java",
+            "com.intellij.modules.lsp"
+        )
+    }
+}
+
+intellijPlatform {
+    pluginConfiguration {
+        ideaVersion {
+            sinceBuild = "252.25557"
+        }
+
+        changeNotes = """
+            Initial version
+        """.trimIndent()
+    }
 }
 
 tasks {
     // Set the JVM compatibility versions
     withType<JavaCompile> {
-        sourceCompatibility = "17"
-        targetCompatibility = "17"
+        sourceCompatibility = "21"
+        targetCompatibility = "21"
     }
-    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-        kotlinOptions.jvmTarget = "17"
-    }
+}
 
-    patchPluginXml {
-        sinceBuild.set("241")
-        untilBuild.set("243.*")
+tasks.prepareSandbox {
+    // 将 lsp 文件夹直接拷贝到插件安装目录的根部，而不是塞进 lib/*.jar
+    from("src/main/resources/lsp") {
+        into("${pluginName.get()}/lsp")
     }
+}
 
-    signPlugin {
-        certificateChain.set(System.getenv("CERTIFICATE_CHAIN"))
-        privateKey.set(System.getenv("PRIVATE_KEY"))
-        password.set(System.getenv("PRIVATE_KEY_PASSWORD"))
-    }
+tasks.withType<org.jetbrains.intellij.platform.gradle.tasks.RunIdeTask> {
+    // 強制測試環境開啟內部模式
+    systemProperty("idea.is.internal", "true")
 
-    publishPlugin {
-        token.set(System.getenv("PUBLISH_TOKEN"))
+    // 如果你想在開發控制台看到 Node 的所有輸出，也可以加上這行
+    logging.captureStandardOutput(org.gradle.api.logging.LogLevel.INFO)
+}
+
+//sourceSets {
+//    main {
+//        kotlin.srcDirs("src/main/kotlin")
+//        resources.srcDirs("src/main/resources")
+//    }
+//}
+
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
     }
 }

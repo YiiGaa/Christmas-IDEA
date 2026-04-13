@@ -1,0 +1,1 @@
+在Christmas-vscode工程中，运行`npm run bundle-lsp`，将/dist/index.js拷贝过来

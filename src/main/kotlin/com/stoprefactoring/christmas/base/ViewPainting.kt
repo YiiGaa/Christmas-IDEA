@@ -1,4 +1,4 @@
-package com.stoprefactoring.christmas
+package com.stoprefactoring.christmas.base
 
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.project.Project
@@ -26,7 +26,7 @@ import javax.swing.tree.DefaultTreeModel
 class ViewPainting {
     private var menuPanel = JBPopupMenu()
 
-    private fun menuMake_mouseHoverAdapter(): MouseAdapter {
+    private fun menuMakeMouseHoverAdapter(): MouseAdapter {
         return object : MouseAdapter() {
             override fun mouseEntered(e: MouseEvent) {
                 if(e.component is JBMenuItem) {
@@ -41,9 +41,12 @@ class ViewPainting {
         }
     }
 
+    private val targetFileMap: MutableMap<String, String> = mutableMapOf()
+
     private fun menuMake(project:Project): JBPopupMenu {
         //STEP::Init menu
         menuPanel.removeAll()
+        targetFileMap.clear()
         menuPanel.border = BorderFactory.createEmptyBorder(10, 10, 10, 10)
 
         //STEP::Init menu item
@@ -59,9 +62,12 @@ class ViewPainting {
         menuItem_1.border = BorderFactory.createEmptyBorder(5, 0, 5, 0)
         menuItem_2.border = BorderFactory.createEmptyBorder(5, 0, 5, 0)
         menuItem_3.border = BorderFactory.createEmptyBorder(5, 0, 5, 0)
+        menuItem_1.background = null
+        menuItem_2.background = null
+        menuItem_3.background = null
 
         menuItem_1.addActionListener { e1 -> DoExcute_MarkSlected_Run(project) }
-        menuItem_2.addActionListener { e1 -> DoExcute_MarkSlected_OpenFile(project,"target.json") }
+        menuItem_2.addActionListener { e1 -> DoExcute_MarkSlected_OpenFile(project,"config.json","target.json",targetFileMap) }
         menuItem_3.addActionListener { e1 -> DoExcute_MarkSlected_OpenFile(project,"config.json") }
 
         //STEP::Insert menu item
@@ -70,9 +76,9 @@ class ViewPainting {
         menuPanel.add(menuItem_3)
 
         //STEP::Add menu item listener
-        menuItem_1.addMouseListener(menuMake_mouseHoverAdapter())
-        menuItem_2.addMouseListener(menuMake_mouseHoverAdapter())
-        menuItem_3.addMouseListener(menuMake_mouseHoverAdapter())
+        menuItem_1.addMouseListener(menuMakeMouseHoverAdapter())
+        menuItem_2.addMouseListener(menuMakeMouseHoverAdapter())
+        menuItem_3.addMouseListener(menuMakeMouseHoverAdapter())
         
         return menuPanel
     }
@@ -142,6 +148,11 @@ class ViewPainting {
             override fun mouseReleased(e: MouseEvent?) {
                 if (e!=null && e.button == MouseEvent.BUTTON3) {
                     if(DoExcute_MarkSlected(e, tree, project)) {
+                        for (component in menuPanel.components) {
+                            if (component is JBMenuItem) {
+                                (component as JBMenuItem).background = null
+                            }
+                        }
                         menuPanel.show(e.component, e.x, e.y)
                     }
                 }

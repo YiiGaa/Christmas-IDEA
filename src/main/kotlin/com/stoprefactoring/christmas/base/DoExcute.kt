@@ -1,37 +1,42 @@
-package com.stoprefactoring.christmas
+package com.stoprefactoring.christmas.base
 
 import com.intellij.execution.configurations.GeneralCommandLine
-import com.intellij.execution.ui.ConsoleView
-import com.intellij.execution.ui.ConsoleViewContentType
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.actionSystem.AnAction
-import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
-import com.intellij.openapi.observable.util.whenDisposed
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
-import com.intellij.openapi.util.SystemInfo
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.terminal.ui.TerminalWidget
-import com.intellij.testFramework.utils.vfs.getFile
 import com.intellij.ui.content.ContentFactory
 import org.jetbrains.plugins.terminal.TerminalToolWindowManager
 import org.jetbrains.plugins.terminal.ui.TerminalContainer
 import java.awt.event.MouseEvent
 import java.io.File
 import java.nio.charset.Charset
-import javax.swing.Icon
 import javax.swing.JTree
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.core.JsonParser
+import com.fasterxml.jackson.core.json.JsonReadFeature
+import com.fasterxml.jackson.module.kotlin.kotlinModule
+import com.fasterxml.jackson.module.kotlin.readValue
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.TreePath
-import com.google.gson.Gson
-import com.google.gson.JsonObject
-import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.platform.lsp.api.LspServerManager
+import com.stoprefactoring.christmas.lsp.NodeEnv
+import com.stoprefactoring.christmas.lsp.XmasLSPSupport
+import com.stoprefactoring.christmas.lsp.XmasLspServerDescriptor
 
+val objectMapper = ObjectMapper().apply {
+    registerModule(kotlinModule())
+    configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true)
+    configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true)
+    configure(JsonParser.Feature.ALLOW_COMMENTS, true)
+    configure(JsonParser.Feature.ALLOW_TRAILING_COMMA, true)
+}
 
 val viewPainting = ViewPainting()
 fun DoExcute_Reflash(project: Project) {
@@ -54,6 +59,17 @@ fun DoExcute_Reflash(project: Project) {
         toolWindow?.contentManager?.removeAllContents(true)
         toolWindow?.contentManager?.addContent(content)
         toolWindow?.show()
+    }
+
+    //STEP::Restart lsp server
+    ApplicationManager.getApplication().executeOnPooledThread {
+        val serverManager = LspServerManager.getInstance(project)
+        serverManager.stopServers(XmasLSPSupport::class.java)
+        NodeEnv.isStartLSP = true
+        serverManager.ensureServerStarted(
+            XmasLSPSupport::class.java,
+            XmasLspServerDescriptor(project)
+        )
     }
 }
 
@@ -105,7 +121,7 @@ fun DoExcute_ConsoleExcute_Terminal_Do(project: Project, taskFuncion:String){
             }
         }
         var termianlContainer:TerminalContainer ?=null
-        if(DoExcute_ConsoleExcute_Terminal!=null)
+        if(DoExcute_ConsoleExcute_Terminal !=null)
             termianlContainer = terminalWindow.getContainer(DoExcute_ConsoleExcute_Terminal!!)
         if(termianlContainer==null){
             DoExcute_ConsoleExcute_Terminal = terminalWindow.createShellWidget(project.basePath, tabName, true, true)
@@ -144,7 +160,7 @@ fun DoExcute_MarkSlected(event:MouseEvent, tree: JTree, project:Project):Boolean
 }
 fun DoExcute_MarkSlected_OpenFile(project:Project, tail:String){
     //STEP::Find file
-    val filePath = project.basePath + "/Christmas/Input/"+DoExcute_MarkSlected_Slect+"/"+tail
+    val filePath = project.basePath + "/Christmas/Input/"+ DoExcute_MarkSlected_Slect +"/"+tail
     val fileSystem = LocalFileSystem.getInstance()
     val file = fileSystem.findFileByPath(filePath.replace('/', File.separatorChar))
 
@@ -179,7 +195,7 @@ fun DoExcute_MarkSlected_OpenFile(project:Project, tail:String, target:String, t
     }
 
     //STEP::Find file
-    val filePath = project.basePath + "/Christmas/Input/"+DoExcute_MarkSlected_Slect+"/"+tail
+    val filePath = project.basePath + "/Christmas/Input/"+ DoExcute_MarkSlected_Slect +"/"+tail
     val file = fileSystem.findFileByPath(filePath.replace('/', File.separatorChar))
 
     //WHEN::Config file is not exists
@@ -189,8 +205,10 @@ fun DoExcute_MarkSlected_OpenFile(project:Project, tail:String, target:String, t
 
     //WHEN::Get real target file path
     val config = File(filePath.replace('/', File.separatorChar)).readText()
-    val configObject = Gson().fromJson(config, JsonObject::class.java)
-    val targetFilePath = project.basePath + if(configObject.has("targetFile")) "/Christmas/"+configObject.get("targetFile").asString else "/Christmas/Input/$DoExcute_MarkSlected_Slect/$target"
+    val configNode = objectMapper.readTree(config)
+    val targetFileNode = configNode.get("targetFile")
+    val targetFileValue = targetFileNode?.asText()
+    val targetFilePath = project.basePath + if(targetFileValue != null) "/Christmas/$targetFileValue" else "/Christmas/Input/$DoExcute_MarkSlected_Slect/$target"
     val targetFile =  fileSystem.findFileByPath(targetFilePath.replace('/', File.separatorChar))
 
     //WHEN::Open file when found

@@ -1,18 +1,17 @@
-<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+<!-- Plugin Configuration File: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
-    <!-- Unique identifier of the plugin. It should be FQN. It cannot be changed between the plugin versions. -->
+    <!-- Unique identifier of the plugin. It should be FQN, cannot be changed between the plugin versions. -->
     <id>com.stoprefactoring.Christmas</id>
 
     <!-- Public plugin name should be written in Title Case.
-         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-name -->
+         Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-name -->
     <name>Christmas</name>
 
     <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
     <vendor email="yiigaa@126.com" url="https://www.stoprefactoring.com">stoprefactoring.com</vendor>
 
     <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
-         Simple HTML elements (text formatting, paragraphs, and lists) can be added inside of <![CDATA[ ]]> tag.
-         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
+         Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-description -->
     <description><![CDATA[<div>A IDEA extension for the Christmas tool, which is a generic code generator. Before using the extension, you need to ensure that the first level of the project directory contains the Christmas tool, because The extension essentially operates the Christmas tool from the command line.</div>
     <div> </div>
     <div>--Stop refactoring production</div>
@@ -20,22 +19,40 @@
     <div>这是一个Christmas工具的IDEA插件，Christmas是一个通用代码生成器。使用插件前，需要保证工程目录的一级目录包含Christmas工具，因为插件实质上是通过命令行操作Christmas工具的。</div>
     <div> </div>
     <div>--停止重构出品</div>
+    <div> </div>
+    <div><strong>❁ 版本更新信息 Extension Release Notes</strong></div>
+    <div>> 3.0</div>
+    <div>- [update] 适配Christmas3，增加.xmas文件语法检查、语法提示</div>
+    <div>- [update] Compatible with Christmas3, added syntax check and syntax hint for .xmas files</div>
   ]]></description>
 
     <!-- Product and plugin compatibility requirements.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
     <depends>com.intellij.modules.platform</depends>
     <depends>org.jetbrains.plugins.terminal</depends>
+    <depends>com.intellij.modules.lsp</depends>
 
-    <!-- Extension points defined by the plugin.
+    <resource-bundle>messages.MyMessageBundle</resource-bundle>
+    <!-- Extensions defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
-        <toolWindow factoryClass="com.stoprefactoring.christmas.Start" id="Christmas" canCloseContents="false"
+        <postStartupActivity
+                    implementation="com.stoprefactoring.christmas.Init"/>
+        <notificationGroup
+                id="Christmas Notifications"
+                displayType="BALLOON"
+                isLogByDefault="true"/>
+        <toolWindow factoryClass="com.stoprefactoring.christmas.base.Start" id="Christmas" canCloseContents="false"
                     anchor="right" icon="/icon/logo.svg">
         </toolWindow>
+        <fileType
+                name="christmas"
+                extensions="xmas"
+                language="christmas"
+                implementationClass="com.stoprefactoring.christmas.lsp.XmasFileType"
+                fieldName="INSTANCE"/>
+        <platform.lsp.serverSupportProvider
+                implementation="com.stoprefactoring.christmas.lsp.XmasLSPSupport"
+                />
     </extensions>
-
-    <applicationListeners>
-        <listener class="com.stoprefactoring.christmas.ListenOpenProject" topic="com.intellij.openapi.project.ProjectManagerListener"/>
-    </applicationListeners>
 </idea-plugin>

@@ -6,28 +6,23 @@ import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.SystemInfo
-import com.intellij.platform.lsp.api.LspServer
 import com.stoprefactoring.christmas.base.Language
 import java.io.File
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
+import java.net.URI
 import java.util.concurrent.CompletableFuture
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
-import java.net.URI;
 
-import com.intellij.platform.lsp.api.LspServerManager
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.future.await // 需要引入 kotlinx-coroutines-jdk8 或者手动处理 CompletableFuture
-
-private const val PLUGIN_ID = "com.stoprefactoring.christmas"
+private const val PLUGIN_ID = "com.stoprefactoring.Christmas"
 private const val NODE_VERSION = "v22.22.0"
 private const val NODE_LOCAL = 20
 private const val NODE_DOWNLOAD_BASE = "https://nodejs.org/dist/$NODE_VERSION/"
 
 object NodeEnv {
+    private val LOG = Logger.getInstance(NodeEnv::class.java)
+
     @Volatile
     var isReady: Boolean = false
     @Volatile
@@ -71,6 +66,63 @@ object NodeEnv {
         }
     }
 
+    private fun GetPluginRootDir(): File? {
+        val pluginId = PluginId.getId(PLUGIN_ID)
+        val pluginPath = PluginManagerCore.getPlugin(pluginId)?.pluginPath?.toFile()
+        if (pluginPath != null && pluginPath.exists()) {
+            return pluginPath
+        }
+
+        return try {
+            val locationFile = File(NodeEnv::class.java.protectionDomain.codeSource.location.toURI())
+            when {
+                locationFile.isFile && locationFile.parentFile?.name == "lib" -> locationFile.parentFile?.parentFile
+                locationFile.isDirectory -> locationFile
+                else -> locationFile.parentFile
+            }?.takeIf { it.exists() }
+        } catch (e: Exception) {
+            LOG.warn(Language.text("lsp.error.dir"), e)
+            null
+        }
+    }
+
+    private fun GetRuntimeDir(): File? {
+        val pluginRootDir = GetPluginRootDir() ?: return null
+        return File(pluginRootDir, "runtime").also { it.mkdirs() }
+    }
+
+    fun GetLspServerFile(): File {
+        val pluginRootDir = GetPluginRootDir()
+            ?: throw IllegalStateException(Language.text("lsp.error.dir"))
+
+        val directFile = File(pluginRootDir, "lsp/index.js")
+        if (directFile.exists()) {
+            return directFile
+        }
+
+        val packagedFile = File(pluginRootDir, "resources/lsp/index.js")
+        if (packagedFile.exists()) {
+            return packagedFile
+        }
+
+        val runtimeDir = GetRuntimeDir()
+            ?: throw IllegalStateException(Language.text("lsp.error.dir"))
+        val lspDir = File(runtimeDir, "lsp").also { it.mkdirs() }
+        val runtimeFile = File(lspDir, "index.js")
+        if (runtimeFile.exists()) {
+            return runtimeFile
+        }
+
+        val resourceStream = NodeEnv::class.java.classLoader.getResourceAsStream("lsp/index.js")
+            ?: throw IllegalStateException(Language.text("lsp.error.file"))
+        resourceStream.use { input ->
+            FileOutputStream(runtimeFile).use { output ->
+                input.copyTo(output)
+            }
+        }
+        return runtimeFile
+    }
+
     //TIPS::Download and extract node.js
     private fun DownloadAndExtract(
         downloadUrl: String,
@@ -100,6 +152,7 @@ object NodeEnv {
                         targetFile.mkdirs()
                     } else {
                         if(entry.name.endsWith("node.exe")) {
+                            targetFile.parentFile?.mkdirs()
                             FileOutputStream(targetFile).use { out ->
                                 val buffer = ByteArray(8192)
                                 var len: Int
@@ -155,6 +208,7 @@ object NodeEnv {
             }
         }
         inputStream.close()
+        connection.disconnect()
     }
 
     //TIPS::Check local node
@@ -163,7 +217,7 @@ object NodeEnv {
             val process = Runtime.getRuntime().exec(arrayOf("node", "-v"))
             val versionString = process.inputStream.bufferedReader().readText().trim()
             val majorVersion = versionString.removePrefix("v").split(".").firstOrNull()?.toInt() ?: 0
-            return majorVersion >= NODE_LOCAL
+            majorVersion >= NODE_LOCAL
         } catch (e: Exception) {
             false
         }
@@ -180,10 +234,7 @@ object NodeEnv {
         }
 
         //STEP::Create node dir('runtime')
-        val pluginID = PluginId.getId(PLUGIN_ID)
-        val targetDir = PluginManagerCore.getPlugin(pluginID)?.pluginPath?.toFile()?.let { base ->
-            File(base, "runtime").also { it.mkdirs() }
-        }
+        val targetDir = GetRuntimeDir()
         if (targetDir == null) {
             future.completeExceptionally(IllegalStateException(Language.text("lsp.error.dir")))
             return future
@@ -202,9 +253,14 @@ object NodeEnv {
 
         //STEP::Check file exists
         val nodeFile = File(targetDir, downloadInfo.fileName)
-        if (nodeFile.exists() && (SystemInfo.isWindows || nodeFile.canExecute())) {
-            future.complete(nodeFile.absolutePath)
-            return future
+        if (nodeFile.exists()) {
+            if (!SystemInfo.isWindows && !nodeFile.canExecute()) {
+                nodeFile.setExecutable(true)
+            }
+            if (SystemInfo.isWindows || nodeFile.canExecute()) {
+                future.complete(nodeFile.absolutePath)
+                return future
+            }
         }
 
         //STEP::Download and extract node
@@ -217,6 +273,7 @@ object NodeEnv {
                     }
                     future.complete(nodeFile.absolutePath)
                 } catch (e: Exception) {
+                    LOG.warn(Language.text("lsp.error.download"), e)
                     if(CheckLocal()){
                         future.complete("node")
                     } else {

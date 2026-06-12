@@ -21,6 +21,9 @@
     <div>--停止重构出品</div>
     <div> </div>
     <div><strong>❁ 版本更新信息 Extension Release Notes</strong></div>
+    <div>> 3.1</div>
+    <div>- [bug] .xmas文件语法检查、语法提示不生效</div>
+    <div>- [bug] .xmas file syntax check, syntax prompt not effective</div>
     <div>> 3.0</div>
     <div>- [update] 适配Christmas3，增加.xmas文件语法检查、语法提示</div>
     <div>- [update] Compatible with Christmas3, added syntax check and syntax hint for .xmas files</div>

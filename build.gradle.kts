@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.stoprefactoring"
-version = "3.0"
+version = "3.1"
 
 repositories {
     mavenCentral()
@@ -17,13 +17,12 @@ repositories {
 // Read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin.html
 dependencies {
     intellijPlatform {
-        intellijIdea("2025.2.4")
+        intellijIdea("2025.3.6")
         testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.Platform)
 
         bundledPlugins(
             "org.jetbrains.plugins.terminal",
-            "com.intellij.java",
-            "com.intellij.modules.lsp"
+            "com.intellij.java"
         )
     }
 }

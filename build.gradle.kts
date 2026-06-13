@@ -16,6 +16,8 @@ repositories {
 
 // Read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin.html
 dependencies {
+    implementation("org.apache.commons:commons-compress:1.28.0")
+
     intellijPlatform {
         intellijIdea("2025.3.6")
         testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.Platform)
